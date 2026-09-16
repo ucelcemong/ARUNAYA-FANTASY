@@ -156,6 +156,13 @@ input{ font-family:inherit; }
   border-radius:12px; background:#DCE9C6;
   display:flex; align-items:center; justify-content:center;
 }
+.class-portrait img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  object-position:center bottom;
+}
 .class-info{ flex:1; min-width:0; }
 .class-info h3{ font-size:16px; letter-spacing:.1em; }
 .class-desc{ font-size:11.5px; color:var(--ink-soft); line-height:1.45; margin:3px 0 8px; }

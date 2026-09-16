@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARUNAYA FANTASY — Character Preview</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .preview-page{
+      min-height:100vh;
+      padding:24px 16px 40px;
+      background:#F4F1E8;
+    }
+
+    .preview-header{
+      max-width:1000px;
+      margin:0 auto 24px;
+      text-align:center;
+    }
+
+    .preview-header h1{
+      margin:0 0 6px;
+      letter-spacing:.12em;
+    }
+
+    .preview-header p{
+      margin:0;
+      color:#6E695E;
+      font-size:13px;
+    }
+
+    .preview-grid{
+      max-width:1000px;
+      margin:auto;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .preview-card{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      padding:14px;
+      background:#FFFDF7;
+      border:1px solid #D8D0BE;
+      border-radius:16px;
+      box-shadow:0 4px 14px rgba(70,55,30,.08);
+    }
+
+    .preview-portrait{
+      width:150px;
+      height:180px;
+      flex:none;
+      overflow:hidden;
+      border-radius:14px;
+      background:#DCE9C6;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .preview-portrait img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      object-position:center bottom;
+      display:block;
+    }
+
+    .preview-info{
+      min-width:0;
+    }
+
+    .preview-info h2{
+      margin:0 0 4px;
+      font-size:20px;
+    }
+
+    .preview-info .class-name{
+      margin:0 0 10px;
+      color:#9A7431;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+
+    .preview-info p{
+      margin:0;
+      color:#6E695E;
+      line-height:1.5;
+      font-size:13px;
+    }
+
+    .preview-path{
+      margin-top:10px;
+      padding:7px 9px;
+      border-radius:7px;
+      background:#F1EBDD;
+      color:#746C5C;
+      font:11px monospace;
+      word-break:break-all;
+    }
+
+    @media (max-width:700px){
+      .preview-grid{
+        grid-template-columns:1fr;
+      }
+
+      .preview-card{
+        align-items:flex-start;
+      }
+
+      .preview-portrait{
+        width:110px;
+        height:145px;
+      }
+    }
+
+    @media (max-width:420px){
+      .preview-page{
+        padding:18px 10px 30px;
+      }
+
+      .preview-card{
+        gap:10px;
+        padding:10px;
+      }
+
+      .preview-portrait{
+        width:90px;
+        height:125px;
+      }
+
+      .preview-info h2{
+        font-size:17px;
+      }
+
+      .preview-info p{
+        font-size:12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="preview-page">
+
+    <header class="preview-header">
+      <h1>ARUNAYA FANTASY</h1>
+      <p>Character Selection — Visual Preview</p>
+    </header>
+
+    <section class="preview-grid">
+
+      <article class="preview-card">
+        <div class="preview-portrait">
+          <img src="assets/characters/kael/kael-concept.png" alt="Kael Arvandra">
+        </div>
+        <div class="preview-info">
+          <h2>Kael Arvandra</h2>
+          <p class="class-name">Warrior</p>
+          <p>Character Warrior Level 1.</p>
+          <div class="preview-path">assets/characters/kael/kael-concept.png</div>
+        </div>
+      </article>
+
+      <article class="preview-card">
+        <div class="preview-portrait">
+          <img src="assets/characters/elara/elara-concept.png" alt="Elara Veylin">
+        </div>
+        <div class="preview-info">
+          <h2>Elara Veylin</h2>
+          <p class="class-name">Mage</p>
+          <p>Character Mage Level 1.</p>
+          <div class="preview-path">assets/characters/elara/elara-concept.png</div>
+        </div>
+      </article>
+
+      <article class="preview-card">
+        <div class="preview-portrait">
+          <img src="assets/characters/luna/luna-concept.png" alt="Luna Myesha">
+        </div>
+        <div class="preview-info">
+          <h2>Luna Myesha</h2>
+          <p class="class-name">Archer</p>
+          <p>Character Archer Level 1.</p>
+          <div class="preview-path">assets/characters/luna/luna-concept.png</div>
+        </div>
+      </article>
+
+      <article class="preview-card">
+        <div class="preview-portrait">
+          <img src="assets/characters/lior/lior-concept.png" alt="Lior Kaien">
+        </div>
+        <div class="preview-info">
+          <h2>Lior Kaien</h2>
+          <p class="class-name">Cleric</p>
+          <p>Character Cleric Level 1.</p>
+          <div class="preview-path">assets/characters/lior/lior-concept.png</div>
+        </div>
+      </article>
+
+    </section>
+
+  </main>
+</body>
+</html>

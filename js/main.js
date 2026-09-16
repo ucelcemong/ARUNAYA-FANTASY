@@ -28,6 +28,13 @@ const gameState = {
 // ============================================================
 // DATA — CLASS & APPEARANCE
 // ============================================================
+const CHARACTER_ASSETS = {
+  warrior: 'assets/characters/kael/kael-concept.png',
+  archer: 'assets/characters/luna/luna-concept.png',
+  mage: 'assets/characters/elara/elara-concept.png',
+  cleric: 'assets/characters/lior/lior-concept.png'
+};
+
 const CLASS_DATA = [
   { id:'warrior', name:'Warrior',
     desc:'Pendekar garis depan yang tangguh. Mengandalkan kekuatan fisik dan pertahanan terkuat di medan pertempuran.',
@@ -228,10 +235,15 @@ function runLoading(){
 // ============================================================
 function renderClassList(){
   const wrap = document.getElementById('class-list');
+
   wrap.innerHTML = CLASS_DATA.map(c => {
     const s = c.stats;
+    const asset = CHARACTER_ASSETS[c.id];
+
     return '<button type="button" class="class-card" data-class="' + c.id + '">'
-      + '<div class="class-portrait">' + charSVG(defaultCfgForClass(c.id), c.id, 72) + '</div>'
+      + '<div class="class-portrait">'
+      + '<img src="' + asset + '" alt="' + c.name + '">'
+      + '</div>'
       + '<div class="class-info">'
       +   '<h3>' + c.name + '</h3>'
       +   '<p class="class-desc">' + c.desc + '</p>'
