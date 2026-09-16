@@ -110,8 +110,8 @@ function defaultCfgForClass(id){
   const map = {
     warrior:{ gender:'male',   skin:1, hair:'spiky', hairColor:0, eyes:'sharp',  clothing:0 },
     mage:   { gender:'female', skin:0, hair:'long',  hairColor:1, eyes:'round',  clothing:1 },
-    archer: { gender:'male',   skin:2, hair:'short', hairColor:2, eyes:'normal', clothing:0 },
-    cleric: { gender:'female', skin:1, hair:'wavy',  hairColor:3, eyes:'normal', clothing:2 }
+    archer: { gender:'female',   skin:2, hair:'short', hairColor:2, eyes:'normal', clothing:0 },
+    cleric: { gender:'male', skin:1, hair:'wavy',  hairColor:3, eyes:'normal', clothing:2 }
   };
   return map[id] || { gender:'male', skin:1, hair:'short', hairColor:0, eyes:'normal', clothing:0 };
 }
@@ -518,14 +518,20 @@ function renderCreationOptions(){
   const hairIds = hairListFor(cr.gender);
   if (!hairIds.includes(cr.hair)) cr.hair = hairIds[0];
 
-  renderChipRow('opt-gender', ['Laki-laki', 'Perempuan'],
-    cr.gender === 'male' ? 0 : 1,
-    i => { cr.gender = i === 0 ? 'male' : 'female'; });
-  renderSwatchRow('opt-skin', SKIN_TONES, cr.skin,
-    i => { cr.skin = i; });
-  renderChipRow('opt-hair', hairIds.map(hairName),
-    hairIds.indexOf(cr.hair),
-    i => { cr.hair = hairIds[i]; });
+  const lockedGender =
+  gameState.selectedClassId === 'archer' ||
+  gameState.selectedClassId === 'mage'
+    ? 'female'
+    : 'male';
+
+cr.gender = lockedGender;
+
+renderChipRow(
+  'opt-gender',
+  [lockedGender === 'male' ? 'Laki-laki' : 'Perempuan'],
+  0,
+  () => {}
+);
   renderSwatchRow('opt-haircolor', HAIR_COLORS, cr.hairColor,
     i => { cr.hairColor = i; });
   renderChipRow('opt-eyes', EYE_STYLES.map(e => e.name),
