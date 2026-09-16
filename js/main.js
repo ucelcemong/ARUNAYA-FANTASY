@@ -27,25 +27,24 @@ const gameState = {
 
 // ============================================================
 // DATA — CLASS & APPEARANCE
+// (urutan array = urutan tampil di Character Selection:
+//  Warrior, Archer, Mage, Cleric)
 // ============================================================
-const CHARACTER_ASSETS = {
-  warrior: 'assets/characters/kael/kael-concept.png',
-  archer: 'assets/characters/luna/luna-concept.png',
-  mage: 'assets/characters/elara/elara-concept.png',
-  cleric: 'assets/characters/lior/lior-concept.png'
-};
-
 const CLASS_DATA = [
-  { id:'warrior', name:'Warrior',
+  { id:'warrior', name:'Warrior', character:'Kael Arvandra',
+    asset:'assets/characters/kael/kael-concept.png',
     desc:'Pendekar garis depan yang tangguh. Mengandalkan kekuatan fisik dan pertahanan terkuat di medan pertempuran.',
     stats:{ hp:120, mp:30, atk:14, def:12, matk:2, agi:6 } },
-  { id:'mage', name:'Mage',
-    desc:'Pengguna sihir elemen dengan kekuatan magis besar, tetapi rentan terhadap serangan fisik.',
-    stats:{ hp:70, mp:60, atk:4, def:4, matk:16, agi:6 } },
-  { id:'archer', name:'Archer',
+  { id:'archer', name:'Archer', character:'Luna Myesha',
+    asset:'assets/characters/luna/luna-concept.png',
     desc:'Pemburu lincah dengan ketepatan tinggi. Mengandalkan kecepatan dan serangan jarak jauh.',
     stats:{ hp:90, mp:40, atk:11, def:6, matk:4, agi:12 } },
-  { id:'cleric', name:'Cleric',
+  { id:'mage', name:'Mage', character:'Elara Veylin',
+    asset:'assets/characters/elara/elara-concept.png',
+    desc:'Pengguna sihir elemen dengan kekuatan magis besar, tetapi rentan terhadap serangan fisik.',
+    stats:{ hp:70, mp:60, atk:4, def:4, matk:16, agi:6 } },
+  { id:'cleric', name:'Cleric', character:'Lior Kaien',
+    asset:'assets/characters/lior/lior-concept.png',
     desc:'Penjaga cahaya yang menyeimbangkan pertempuran melalui sihir penyembuhan dan perlindungan.',
     stats:{ hp:85, mp:55, atk:6, def:8, matk:12, agi:7 } }
 ];
@@ -82,6 +81,8 @@ function defaultCfgForClass(id){
 
 // ============================================================
 // CHARACTER — SVG PLACEHOLDER GENERATOR (ringan, original)
+// Dipakai oleh: Character Creation, HUD (avatar), World Preview,
+// dan fallback Character Selection jika PNG gagal dimuat.
 // ============================================================
 function charSVG(cfg, classId, size, faceOnly){
   const skin  = SKIN_TONES[cfg.skin % SKIN_TONES.length];
@@ -231,38 +232,143 @@ function runLoading(){
 }
 
 // ============================================================
-// CHARACTER SELECTION
+// CHARACTER SELECTION (v2 — CHARACTER FIRST)
 // ============================================================
-function renderClassList(){
+const VITAL_MAX = {
+  hp: Math.max(...CLASS_DATA.map(c => c.stats.hp)),  // 120
+  mp: Math.max(...CLASS_DATA.map(c => c.stats.mp))   // 60
+};
+
+const csEls = {};                // referensi elemen UI selection
+const fallbackUsed = new Set();  // PNG yang gagal dimuat (agar tidak retry loop)
+const fallbackURICache = {};     // fallback SVG per class (data-URI, dibuat sekali)
+
+function getClass(id){
+  return CLASS_DATA.find(c => c.id === id) || null;
+}
+
+function getFallbackURI(id){
+  if (!fallbackURICache[id]){
+    fallbackURICache[id] = 'data:image/svg+xml;charset=utf-8,'
+      + encodeURIComponent(charSVG(defaultCfgForClass(id), id, 220));
+  }
+  return fallbackURICache[id];
+}
+
+function applyCharImg(img, cls){
+  const c = getClass(cls);
+  if (!img || !c) return;
+  img.alt = c.character + ' — ' + c.name;
+  img.dataset.class = cls;
+  img.src = fallbackUsed.has(cls) ? getFallbackURI(cls) : c.asset;
+}
+
+function renderClassSelect(){
   const wrap = document.getElementById('class-list');
-
-  wrap.innerHTML = CLASS_DATA.map(c => {
-    const s = c.stats;
-    const asset = CHARACTER_ASSETS[c.id];
-
-    return '<button type="button" class="class-card" data-class="' + c.id + '">'
-      + '<div class="class-portrait">'
-      + '<img src="' + asset + '" alt="' + c.name + '">'
-      + '</div>'
-      + '<div class="class-info">'
-      +   '<h3>' + c.name + '</h3>'
-      +   '<p class="class-desc">' + c.desc + '</p>'
-      +   '<ul class="class-stats">'
-      +     '<li><span>HP</span><b>' + s.hp + '</b></li>'
-      +     '<li><span>MP</span><b>' + s.mp + '</b></li>'
-      +     '<li><span>ATK</span><b>' + s.atk + '</b></li>'
-      +     '<li><span>DEF</span><b>' + s.def + '</b></li>'
-      +     '<li><span>MATK</span><b>' + s.matk + '</b></li>'
-      +     '<li><span>AGI</span><b>' + s.agi + '</b></li>'
-      +   '</ul>'
-      + '</div></button>';
+  const thumbs = CLASS_DATA.map(c => {
+    return '<button type="button" class="cs-thumb" data-class="' + c.id + '" aria-label="Pilih ' + c.character + '">'
+      + '<span class="cs-thumb-img"><img decoding="async" alt=""></span>'
+      + '<span class="cs-thumb-name">' + c.character.split(' ')[0].toUpperCase() + '</span>'
+      + '</button>';
   }).join('');
+
+  wrap.innerHTML =
+    '<div class="cs-layout">'
+    +  '<div class="cs-hero"><img id="cs-hero" decoding="async" alt=""></div>'
+    +  '<div class="cs-info" id="cs-info">'
+    +    '<h3 class="cs-name" id="cs-name"></h3>'
+    +    '<p class="cs-role" id="cs-role"></p>'
+    +    '<p class="cs-desc" id="cs-desc"></p>'
+    +    '<div class="cs-vitals">'
+    +      '<div class="cs-vital"><span class="cs-vital-label">HP</span><span class="cs-vital-track"><span class="cs-vital-fill is-hp" id="cs-vital-hp"></span></span><span class="cs-vital-num" id="cs-num-hp"></span></div>'
+    +      '<div class="cs-vital"><span class="cs-vital-label">MP</span><span class="cs-vital-track"><span class="cs-vital-fill is-mp" id="cs-vital-mp"></span></span><span class="cs-vital-num" id="cs-num-mp"></span></div>'
+    +    '</div>'
+    +    '<ul class="cs-stats">'
+    +      '<li><span>ATK</span><b id="cs-stat-atk"></b></li>'
+    +      '<li><span>DEF</span><b id="cs-stat-def"></b></li>'
+    +      '<li><span>MATK</span><b id="cs-stat-matk"></b></li>'
+    +      '<li><span>AGI</span><b id="cs-stat-agi"></b></li>'
+    +    '</ul>'
+    +  '</div>'
+    +  '<div class="cs-thumbs">' + thumbs + '</div>'
+    + '</div>';
+
+  csEls.hero   = document.getElementById('cs-hero');
+  csEls.info   = document.getElementById('cs-info');
+  csEls.name   = document.getElementById('cs-name');
+  csEls.role   = document.getElementById('cs-role');
+  csEls.desc   = document.getElementById('cs-desc');
+  csEls.hpFill = document.getElementById('cs-vital-hp');
+  csEls.mpFill = document.getElementById('cs-vital-mp');
+  csEls.hpNum  = document.getElementById('cs-num-hp');
+  csEls.mpNum  = document.getElementById('cs-num-mp');
+  csEls.stats  = {
+    atk:  document.getElementById('cs-stat-atk'),
+    def:  document.getElementById('cs-stat-def'),
+    matk: document.getElementById('cs-stat-matk'),
+    agi:  document.getElementById('cs-stat-agi')
+  };
+
+  // Fallback SVG hanya jika PNG gagal dimuat — asset PNG tetap prioritas utama
+  wrap.querySelectorAll('img').forEach(img => {
+    img.addEventListener('error', () => {
+      const cls = img.dataset.class;
+      if (!cls || fallbackUsed.has(cls)) return;
+      fallbackUsed.add(cls);
+      applyCharImg(img, cls);
+    });
+  });
+
+  // Isi thumbnail (sekali render — sekaligus preload keempat PNG via cache browser)
+  wrap.querySelectorAll('.cs-thumb').forEach(t => {
+    applyCharImg(t.querySelector('img'), t.dataset.class);
+  });
+
+  // Label header & tombol via JS agar index.html tidak perlu diubah
+  document.querySelector('#screen-class .screen-header h2').textContent = 'CHARACTER SELECTION';
+  document.getElementById('btn-class-confirm').textContent = 'LANJUTKAN';
+}
+
+function setCharacterInfo(id){
+  const c = getClass(id);
+  if (!c || !csEls.hero) return;
+  applyCharImg(csEls.hero, id);
+  csEls.name.textContent = c.character;
+  csEls.role.textContent = c.name;
+  csEls.desc.textContent = c.desc;
+  csEls.hpNum.textContent = c.stats.hp;
+  csEls.mpNum.textContent = c.stats.mp;
+  csEls.hpFill.style.width = Math.round(c.stats.hp / VITAL_MAX.hp * 100) + '%';
+  csEls.mpFill.style.width = Math.round(c.stats.mp / VITAL_MAX.mp * 100) + '%';
+  csEls.stats.atk.textContent  = c.stats.atk;
+  csEls.stats.def.textContent  = c.stats.def;
+  csEls.stats.matk.textContent = c.stats.matk;
+  csEls.stats.agi.textContent  = c.stats.agi;
+
+  // fade ringan sekali-jalan saat berganti karakter (bukan loop)
+  [csEls.hero, csEls.info].forEach(el => {
+    el.classList.remove('cs-swap');
+    void el.offsetWidth; // retrigger animasi
+    el.classList.add('cs-swap');
+  });
+}
+
+function selectClass(id){
+  if (!getClass(id)) return;
+  gameState.selectedClassId = id;
+  setCharacterInfo(id);
+  document.querySelectorAll('.cs-thumb').forEach(t =>
+    t.classList.toggle('selected', t.dataset.class === id));
+  document.getElementById('btn-class-confirm').disabled = false;
 }
 
 function clearClassSelection(){
   gameState.selectedClassId = null;
-  document.getElementById('btn-class-confirm').disabled = true;
-  document.querySelectorAll('.class-card.selected').forEach(el => el.classList.remove('selected'));
+  const btn = document.getElementById('btn-class-confirm');
+  if (btn) btn.disabled = true;
+  document.querySelectorAll('.cs-thumb.selected').forEach(el => el.classList.remove('selected'));
+  // preview default: karakter pertama (tanpa state selected)
+  if (csEls.hero) setCharacterInfo(CLASS_DATA[0].id);
 }
 
 function confirmClass(){
@@ -382,7 +488,7 @@ function enterGame(){
 
 function initGame(){
   checkSave(); updateContinueBtn();
-  renderClassList();
+  renderClassSelect();
   bindEvents();
   runLoading();
 }
@@ -717,14 +823,11 @@ function bindEvents(){
     btn.addEventListener('click', () => showScreen(btn.dataset.back));
   });
 
-  // Character selection (delegasi)
+  // Character selection (delegasi — terpasang sekali, tidak dirender ulang)
   document.getElementById('class-list').addEventListener('click', e => {
-    const card = e.target.closest('.class-card');
-    if (!card) return;
-    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    gameState.selectedClassId = card.dataset.class;
-    document.getElementById('btn-class-confirm').disabled = false;
+    const thumb = e.target.closest('.cs-thumb');
+    if (!thumb) return;
+    selectClass(thumb.dataset.class);
   });
   document.getElementById('btn-class-confirm').addEventListener('click', confirmClass);
 
