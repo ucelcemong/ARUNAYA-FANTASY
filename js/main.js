@@ -1,6 +1,8 @@
 'use strict';
 /* ============================================================
-   ARUNAYA FANTASY — STAGE 1 FOUNDATION
+   ARUNAYA FANTASY — STAGE 1 FOUNDATION V2 (PATCH: save-compat)
+   Flow: Menu → Showcase → Creation → Nickname → Server →
+         Game Loading → Main Game
    Vanilla JS, tanpa dependensi, tanpa resource eksternal.
    ============================================================ */
 
@@ -14,6 +16,7 @@ const gameState = {
   currentScreen: 'screen-loading',
   hasSave: false,
   selectedClassId: null,
+
   creation: {
     gender: 'male',
     skin: 1,
@@ -22,12 +25,16 @@ const gameState = {
     eyes: 'normal',
     clothing: 0
   },
+
+  nickname: '',
+  selectedServerId: null,
+
   player: null
 };
 
 // ============================================================
-// DATA — CLASS & APPEARANCE
-// (urutan array = urutan tampil di Character Selection:
+// DATA — CLASS, APPEARANCE, SERVER, TIPS
+// (urutan array CLASS_DATA = urutan tampil di Character Selection:
 //  Warrior, Archer, Mage, Cleric)
 // ============================================================
 const CLASS_DATA = [
@@ -51,21 +58,51 @@ const CLASS_DATA = [
 
 const SKIN_TONES  = ['#F6D7B8', '#E9B98C', '#C98F5D', '#93603C'];
 const HAIR_COLORS = ['#26201B', '#5C4033', '#C9974B', '#A44A2A', '#CBC0AC'];
+
+// Daftar rambut master (id dipakai charSVG)
 const HAIR_STYLES = [
-  { id:'short', name:'Pendek' },
-  { id:'long',  name:'Panjang' },
-  { id:'spiky', name:'Berdiri' },
-  { id:'wavy',  name:'Ikal' }
+  { id:'short',  name:'Pendek' },
+  { id:'medium', name:'Sedang' },
+  { id:'long',   name:'Panjang' },
+  { id:'spiky',  name:'Berdiri' },
+  { id:'wavy',   name:'Ikal' }
 ];
+// Pilihan rambut per gender (foundation — mudah dikembangkan)
+const HAIR_BY_GENDER = {
+  male:   ['short', 'medium', 'spiky', 'wavy'],
+  female: ['short', 'medium', 'long',  'wavy']
+};
+function hairListFor(gender){
+  return HAIR_BY_GENDER[gender] || HAIR_BY_GENDER.male;
+}
+function hairName(id){
+  const h = HAIR_STYLES.find(x => x.id === id);
+  return h ? h.name : id;
+}
+
 const EYE_STYLES = [
   { id:'normal', name:'Normal' },
   { id:'sharp',  name:'Tajam' },
-  { id:'round',  name:'Bulat' }
+  { id:'round',  name:'Besar' }
 ];
 const CLOTHING = [
   { name:'Rimba',   main:'#4E7C4A', dark:'#3C6239' },
   { name:'Samudra', main:'#3E6C8E', dark:'#305570' },
   { name:'Senja',   main:'#B5543B', dark:'#8E402C' }
+];
+
+// Server prototype — SIMULASI UI SAJA (tanpa networking)
+const SERVERS = [
+  { id:'asia-01', name:'SERVER ASIA', server:'Server 01', status:'ONLINE' },
+  { id:'sea-01',  name:'SERVER SEA',  server:'Server 01', status:'ONLINE' }
+];
+
+const loadingTips = [
+  'Jelajahi dunia untuk menemukan tempat-tempat baru.',
+  'Setiap karakter memiliki gaya bermain yang berbeda.',
+  'Perhatikan lingkungan di sekitar perjalananmu.',
+  'Quest akan membantu mengungkap dunia ARUNAYA.',
+  'Dunia ARUNAYA masih terus berkembang.'
 ];
 
 // Konfigurasi penampilan default untuk portrait tiap class (PROVISIONAL)
@@ -81,10 +118,12 @@ function defaultCfgForClass(id){
 
 // ============================================================
 // CHARACTER — SVG PLACEHOLDER GENERATOR (ringan, original)
-// Dipakai oleh: Character Creation, HUD (avatar), World Preview,
-// dan fallback Character Selection jika PNG gagal dimuat.
+// Dipakai oleh: Character Creation, Nickname preview, HUD (avatar),
+// World Preview, dan fallback Character Selection.
+// BUKAN desain karakter final — renderer dapat diganti nanti.
 // ============================================================
 function charSVG(cfg, classId, size, faceOnly){
+  if (!cfg) return '';
   const skin  = SKIN_TONES[cfg.skin % SKIN_TONES.length];
   const hairC = HAIR_COLORS[cfg.hairColor % HAIR_COLORS.length];
   const cloth = CLOTHING[cfg.clothing % CLOTHING.length];
@@ -105,6 +144,8 @@ function charSVG(cfg, classId, size, faceOnly){
   }
   if (hair === 'long'){
     parts.push('<path d="M28 52 Q26 16 60 16 Q94 16 92 52 L92 96 Q92 104 84 104 L36 104 Q28 104 28 96 Z" fill="' + hairC + '"/>');
+  } else if (hair === 'medium'){
+    parts.push('<path d="M28 52 Q26 16 60 16 Q94 16 92 52 L92 78 Q92 86 84 86 L36 86 Q28 86 28 78 Z" fill="' + hairC + '"/>');
   } else if (hair === 'wavy'){
     parts.push('<path d="M28 52 Q26 16 60 16 Q94 16 92 52 L92 84 Q92 92 84 90 L36 90 Q28 92 28 84 Z" fill="' + hairC + '"/>');
   }
@@ -146,12 +187,15 @@ function charSVG(cfg, classId, size, faceOnly){
       + '<circle cx="38" cy="46" r="6" fill="' + hairC + '"/><circle cx="49" cy="40" r="6.5" fill="' + hairC + '"/>'
       + '<circle cx="62" cy="38" r="6.5" fill="' + hairC + '"/><circle cx="75" cy="42" r="6" fill="' + hairC + '"/>'
       + '<circle cx="84" cy="49" r="5.5" fill="' + hairC + '"/>');
-  } else { // short & long: poni dasar
+  } else { // short, medium & long: poni dasar
     parts.push('<path d="M31 50 Q31 20 60 20 Q89 20 89 50 Q83 34 60 33 Q37 34 31 50 Z" fill="' + hairC + '"/>');
   }
   if (hair === 'long'){
     parts.push('<path d="M31 48 L29 92 Q29 98 36 96 L40 56 Z" fill="' + hairC + '"/>'
       + '<path d="M89 48 L91 92 Q91 98 84 96 L80 56 Z" fill="' + hairC + '"/>');
+  } else if (hair === 'medium'){
+    parts.push('<path d="M31 48 L29 80 Q29 86 36 84 L40 56 Z" fill="' + hairC + '"/>'
+      + '<path d="M89 48 L91 80 Q91 86 84 84 L80 56 Z" fill="' + hairC + '"/>');
   }
   if (classId === 'warrior'){
     parts.push('<rect x="29" y="38" width="62" height="7" rx="3.5" fill="#B5543B"/>'
@@ -205,6 +249,9 @@ function svgToImage(svgString){
 // SCREEN NAVIGATION
 // ============================================================
 function showScreen(id){
+  if (gameState.currentScreen === 'screen-loading-game' && id !== 'screen-loading-game'){
+    stopGameLoading();
+  }
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.toggle('active', s.id === id);
   });
@@ -212,12 +259,32 @@ function showScreen(id){
   if (id !== 'screen-game') stopWorldPreview();
 }
 
+// Navigasi KEMBALI dengan refresh state/UI sesuai screen tujuan.
+// State tidak dihapus — hanya dirender ulang dari state terakhir.
+function navigateBack(target){
+  if (target === 'screen-create'){
+    // Creation: appearance terakhir tetap tersimpan di gameState.creation;
+    // render ulang preview + opsi agar sesuai state.
+    showScreen(target);
+    renderCreation();
+  } else if (target === 'screen-nickname'){
+    // Nickname: nickname terakhir tetap ada; counter, pesan validasi,
+    // dan status tombol LANJUTKAN dirender ulang dari state.
+    showScreen(target);
+    renderNickname();
+  } else {
+    // Class → Menu, Creation → Class: tidak perlu refresh tambahan.
+    showScreen(target);
+  }
+}
+
 // ============================================================
-// LOADING
+// LOADING AWAL
 // ============================================================
 function runLoading(){
   const bar = document.getElementById('loading-bar');
   const text = document.getElementById('loading-text');
+  if (!bar || !text) return;
   let p = 0;
   const iv = setInterval(() => {
     p += 2 + Math.random() * 3.5;
@@ -232,7 +299,7 @@ function runLoading(){
 }
 
 // ============================================================
-// CHARACTER SELECTION (v2 — CHARACTER FIRST)
+// CHARACTER SELECTION (SHOWCASE — CHARACTER FIRST)
 // ============================================================
 const VITAL_MAX = {
   hp: Math.max(...CLASS_DATA.map(c => c.stats.hp)),  // 120
@@ -265,6 +332,7 @@ function applyCharImg(img, cls){
 
 function renderClassSelect(){
   const wrap = document.getElementById('class-list');
+  if (!wrap) return;
   const thumbs = CLASS_DATA.map(c => {
     return '<button type="button" class="cs-thumb" data-class="' + c.id + '" aria-label="Pilih ' + c.character + '">'
       + '<span class="cs-thumb-img"><img decoding="async" alt=""></span>'
@@ -274,10 +342,12 @@ function renderClassSelect(){
 
   wrap.innerHTML =
     '<div class="cs-layout">'
-    +  '<div class="cs-hero"><img id="cs-hero" decoding="async" alt=""></div>'
-    +  '<div class="cs-info" id="cs-info">'
+    +  '<div class="cs-head">'
     +    '<h3 class="cs-name" id="cs-name"></h3>'
-    +    '<p class="cs-role" id="cs-role"></p>'
+    +    '<span class="cs-role" id="cs-role"></span>'
+    +  '</div>'
+    +  '<div class="cs-hero"><img id="cs-hero" decoding="async" alt=""></div>'
+    +  '<div class="cs-body">'
     +    '<p class="cs-desc" id="cs-desc"></p>'
     +    '<div class="cs-vitals">'
     +      '<div class="cs-vital"><span class="cs-vital-label">HP</span><span class="cs-vital-track"><span class="cs-vital-fill is-hp" id="cs-vital-hp"></span></span><span class="cs-vital-num" id="cs-num-hp"></span></div>'
@@ -294,7 +364,6 @@ function renderClassSelect(){
     + '</div>';
 
   csEls.hero   = document.getElementById('cs-hero');
-  csEls.info   = document.getElementById('cs-info');
   csEls.name   = document.getElementById('cs-name');
   csEls.role   = document.getElementById('cs-role');
   csEls.desc   = document.getElementById('cs-desc');
@@ -323,10 +392,6 @@ function renderClassSelect(){
   wrap.querySelectorAll('.cs-thumb').forEach(t => {
     applyCharImg(t.querySelector('img'), t.dataset.class);
   });
-
-  // Label header & tombol via JS agar index.html tidak perlu diubah
-  document.querySelector('#screen-class .screen-header h2').textContent = 'CHARACTER SELECTION';
-  document.getElementById('btn-class-confirm').textContent = 'LANJUTKAN';
 }
 
 function setCharacterInfo(id){
@@ -346,7 +411,7 @@ function setCharacterInfo(id){
   csEls.stats.agi.textContent  = c.stats.agi;
 
   // fade ringan sekali-jalan saat berganti karakter (bukan loop)
-  [csEls.hero, csEls.info].forEach(el => {
+  [csEls.hero, csEls.name, csEls.desc].forEach(el => {
     el.classList.remove('cs-swap');
     void el.offsetWidth; // retrigger animasi
     el.classList.add('cs-swap');
@@ -359,11 +424,15 @@ function selectClass(id){
   setCharacterInfo(id);
   document.querySelectorAll('.cs-thumb').forEach(t =>
     t.classList.toggle('selected', t.dataset.class === id));
-  document.getElementById('btn-class-confirm').disabled = false;
+  const btn = document.getElementById('btn-class-confirm');
+  if (btn) btn.disabled = false;
 }
 
 function clearClassSelection(){
+  // Memulai karakter baru — reset pilihan flow
   gameState.selectedClassId = null;
+  gameState.nickname = '';
+  gameState.selectedServerId = null;
   const btn = document.getElementById('btn-class-confirm');
   if (btn) btn.disabled = true;
   document.querySelectorAll('.cs-thumb.selected').forEach(el => el.classList.remove('selected'));
@@ -373,15 +442,22 @@ function clearClassSelection(){
 
 function confirmClass(){
   if (!gameState.selectedClassId) return;
+  // Reset appearance sesuai class yang dipilih —
+  // Mage → Warrior tidak membawa appearance Mage sebelumnya.
+  gameState.creation = Object.assign(
+    {},
+    defaultCfgForClass(gameState.selectedClassId)
+  );
   showScreen('screen-create');
   renderCreation();
 }
 
 // ============================================================
-// CHARACTER CREATION
+// CHARACTER CREATION (foundation customization)
 // ============================================================
 function renderChipRow(containerId, labels, activeIdx, onPick){
   const el = document.getElementById(containerId);
+  if (!el) return;
   el.innerHTML = '';
   labels.forEach((label, i) => {
     const b = document.createElement('button');
@@ -395,6 +471,7 @@ function renderChipRow(containerId, labels, activeIdx, onPick){
 
 function renderSwatchRow(containerId, colors, activeIdx, onPick){
   const el = document.getElementById(containerId);
+  if (!el) return;
   el.innerHTML = '';
   colors.forEach((c, i) => {
     const b = document.createElement('button');
@@ -408,20 +485,47 @@ function renderSwatchRow(containerId, colors, activeIdx, onPick){
 }
 
 function renderCreationPreview(){
-  document.getElementById('create-preview').innerHTML =
-    charSVG(gameState.creation, gameState.selectedClassId, 170);
+  const el = document.getElementById('create-preview');
+  if (!el) return;
+  el.innerHTML = charSVG(gameState.creation, gameState.selectedClassId, 200);
+}
+
+// Class identity — menampilkan karakter & class yang dipilih di Character Selection
+function renderCreationClassInfo(){
+  let el = document.getElementById('cc-class-info');
+  if (!el){
+    const preview = document.getElementById('create-preview');
+    if (!preview) return;
+    el = document.createElement('div');
+    el.id = 'cc-class-info';
+    preview.parentNode.insertBefore(el, preview.nextSibling);
+  }
+  const c = getClass(gameState.selectedClassId);
+  if (c){
+    el.style.display = 'flex';
+    el.innerHTML = '<span class="cc-char">' + c.character + '</span>'
+      + '<span class="cc-role">' + c.name + '</span>';
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 function renderCreationOptions(){
   const cr = gameState.creation;
+  if (!cr) return;
+
+  // Rambut mengikuti gender — reset ke pilihan valid jika tidak tersedia
+  const hairIds = hairListFor(cr.gender);
+  if (!hairIds.includes(cr.hair)) cr.hair = hairIds[0];
+
   renderChipRow('opt-gender', ['Laki-laki', 'Perempuan'],
     cr.gender === 'male' ? 0 : 1,
     i => { cr.gender = i === 0 ? 'male' : 'female'; });
   renderSwatchRow('opt-skin', SKIN_TONES, cr.skin,
     i => { cr.skin = i; });
-  renderChipRow('opt-hair', HAIR_STYLES.map(h => h.name),
-    HAIR_STYLES.findIndex(h => h.id === cr.hair),
-    i => { cr.hair = HAIR_STYLES[i].id; });
+  renderChipRow('opt-hair', hairIds.map(hairName),
+    hairIds.indexOf(cr.hair),
+    i => { cr.hair = hairIds[i]; });
   renderSwatchRow('opt-haircolor', HAIR_COLORS, cr.hairColor,
     i => { cr.hairColor = i; });
   renderChipRow('opt-eyes', EYE_STYLES.map(e => e.name),
@@ -433,22 +537,182 @@ function renderCreationOptions(){
 
 function renderCreation(){
   renderCreationPreview();
+  renderCreationClassInfo();
   renderCreationOptions();
 }
 
+// BUAT — simpan appearance (sudah ada di state), lanjut ke Nickname
+function openNickname(){
+  showScreen('screen-nickname');
+  renderNickname();
+}
+
+// ============================================================
+// NICKNAME SCREEN
+// ============================================================
+const NICK_INVALID_MSG = '✕ Nickname tidak valid\nGunakan huruf, angka, spasi, underscore (_), strip (-), atau titik (.)';
+const NICK_VALID_REGEX = /^[A-Za-z0-9 ._-]+$/;
+
 function validateNickname(raw){
   const name = (raw || '').trim();
-  if (!name) return { ok:false, msg:'Nama panggilan wajib diisi.' };
-  if (name.length > 16) return { ok:false, msg:'Maksimal 16 karakter.' };
-  if (!/^[A-Za-z0-9 ]+$/.test(name)) return { ok:false, msg:'Gunakan huruf, angka, dan spasi saja.' };
-  return { ok:true, name:name };
+  if (!name) return { ok:false, msg:NICK_INVALID_MSG };
+  if (name.length > 16) return { ok:false, msg:NICK_INVALID_MSG };
+  if (!NICK_VALID_REGEX.test(name)) return { ok:false, msg:NICK_INVALID_MSG };
+  return { ok:true, msg:'✓ Nickname valid', name:name };
+}
+
+function renderNickname(){
+  const c = getClass(gameState.selectedClassId);
+  const preview = document.getElementById('nk-preview');
+  if (preview){
+    preview.innerHTML = charSVG(gameState.creation, gameState.selectedClassId, 160);
+  }
+  const charEl = document.getElementById('nk-char');
+  const roleEl = document.getElementById('nk-role');
+  if (charEl) charEl.textContent = c ? c.character : '';
+  if (roleEl) roleEl.textContent = c ? c.name : '';
+  const input = document.getElementById('nk-nickname');
+  if (!input) return;
+  input.value = gameState.nickname; // pertahankan nickname saat kembali
+  updateNicknameUI(input.value);
+}
+
+function updateNicknameUI(value){
+  const countEl = document.getElementById('nk-count');
+  const msgEl = document.getElementById('nk-msg');
+  const btn = document.getElementById('btn-nickname-confirm');
+  if (!countEl || !msgEl || !btn) return;
+  countEl.textContent = value.length + ' / 16';
+  const v = validateNickname(value);
+  if (value.length === 0){
+    msgEl.textContent = '';
+    msgEl.classList.remove('ok', 'err');
+  } else {
+    msgEl.textContent = v.msg;
+    msgEl.classList.toggle('ok', v.ok);
+    msgEl.classList.toggle('err', !v.ok);
+  }
+  btn.disabled = !v.ok;
+}
+
+function confirmNickname(){
+  const input = document.getElementById('nk-nickname');
+  if (!input) return;
+  const v = validateNickname(input.value);
+  if (!v.ok){ updateNicknameUI(input.value); return; }
+  gameState.nickname = v.name;
+  showScreen('screen-server');
+  renderServerSelect();
+}
+
+// ============================================================
+// SERVER SELECTION (prototype UI — tanpa networking)
+// ============================================================
+function renderServerSelect(){
+  const list = document.getElementById('server-list');
+  if (!list) return;
+  list.innerHTML = SERVERS.map(s =>
+    '<button type="button" class="srv-card' + (gameState.selectedServerId === s.id ? ' selected' : '') + '" data-server="' + s.id + '">'
+    +  '<span class="srv-main">'
+    +    '<span class="srv-name">' + s.name + '</span>'
+    +    '<span class="srv-id">' + s.server + '</span>'
+    +  '</span>'
+    +  '<span class="srv-status">' + s.status + '</span>'
+    + '</button>'
+  ).join('');
+  const btn = document.getElementById('btn-server-confirm');
+  if (btn) btn.disabled = !gameState.selectedServerId;
+}
+
+function selectServer(id){
+  if (!SERVERS.some(s => s.id === id)) return;
+  gameState.selectedServerId = id;
+  document.querySelectorAll('.srv-card').forEach(c =>
+    c.classList.toggle('selected', c.dataset.server === id));
+  const btn = document.getElementById('btn-server-confirm');
+  if (btn) btn.disabled = false;
+}
+
+function confirmServer(){
+  if (!gameState.selectedServerId) return;
+  startGame();
+}
+
+// ============================================================
+// GAME LOADING + TIPS (loading kedua — setelah server dipilih)
+// Progress & tip disimpan di object gameLoading agar aman
+// di-pause (background) lalu di-resume tanpa duplikasi timer.
+// ============================================================
+const gameLoading = { progressTimer:0, tipTimer:0, progress:0, tipIdx:0 };
+
+function startGameLoading(){
+  stopGameLoading(); // anti duplikasi interval
+  gameLoading.progress = 0;
+  gameLoading.tipIdx = Math.floor(Math.random() * loadingTips.length);
+
+  const bar = document.getElementById('loading-game-bar');
+  const pct = document.getElementById('loading-game-pct');
+  const tip = document.getElementById('loading-game-tip');
+  if (bar) bar.style.width = '0%';
+  if (pct) pct.textContent = '0%';
+  if (tip) tip.textContent = loadingTips[gameLoading.tipIdx];
+
+  gameLoading.progressTimer = setInterval(gameLoadingTick, 400);
+  gameLoading.tipTimer = setInterval(gameLoadingTipTick, 1600);
+}
+
+// Satu langkah progress: 0% → 25% → 50% → 75% → 100%
+function gameLoadingTick(){
+  gameLoading.progress = Math.min(100, gameLoading.progress + 25);
+  const bar = document.getElementById('loading-game-bar');
+  const pct = document.getElementById('loading-game-pct');
+  if (bar) bar.style.width = gameLoading.progress + '%';
+  if (pct) pct.textContent = gameLoading.progress + '%';
+  if (gameLoading.progress >= 100){
+    stopGameLoading();            // hentikan timer SEBELUM masuk game
+    enterGame();                  // dipanggil tepat satu kali per flow
+  }
+}
+
+function gameLoadingTipTick(){
+  const tip = document.getElementById('loading-game-tip');
+  if (!tip) return;
+  gameLoading.tipIdx = (gameLoading.tipIdx + 1) % loadingTips.length;
+  tip.classList.remove('tip-swap');
+  void tip.offsetWidth; // retrigger animasi fade
+  tip.classList.add('tip-swap');
+  tip.textContent = loadingTips[gameLoading.tipIdx];
+}
+
+function stopGameLoading(){
+  clearInterval(gameLoading.progressTimer);
+  clearInterval(gameLoading.tipTimer);
+  gameLoading.progressTimer = 0;
+  gameLoading.tipTimer = 0;
+}
+
+// Lanjutkan loading setelah app kembali dari background (document.hidden === false).
+// - Timer masih berjalan → tidak melakukan apa-apa (anti duplikasi).
+// - Progress < 100%  → interval dibuat ulang, lanjut dari progress terakhir.
+// - Progress 100%    → langsung masuk Main Game.
+function resumeGameLoading(){
+  if (gameState.currentScreen !== 'screen-loading-game') return;
+  if (gameLoading.progressTimer || gameLoading.tipTimer) return;
+  if (gameLoading.progress >= 100){
+    stopGameLoading();
+    enterGame();
+    return;
+  }
+  gameLoading.progressTimer = setInterval(gameLoadingTick, 400);
+  gameLoading.tipTimer = setInterval(gameLoadingTipTick, 1600);
 }
 
 // ============================================================
 // GAME INITIALIZATION
 // ============================================================
+// Player final dibuat SETELAH server dipilih (MASUK)
 function createCharacter(name){
-  const cls = CLASS_DATA.find(c => c.id === gameState.selectedClassId);
+  const cls = CLASS_DATA.find(c => c.id === gameState.selectedClassId) || CLASS_DATA[0];
   gameState.player = {
     name: name,
     gender: gameState.creation.gender,
@@ -459,25 +723,26 @@ function createCharacter(name){
     mp: cls.stats.mp, maxMp: cls.stats.mp,
     exp: 0, expToNext: 100,
     gold: 50,
-    appearance: Object.assign({}, gameState.creation)
+    appearance: Object.assign({}, gameState.creation),
+    serverId: gameState.selectedServerId
   };
 }
 
+// Langkah final flow — dipanggil dari MASUK (server)
 function startGame(){
-  const v = validateNickname(document.getElementById('nickname').value);
-  const errEl = document.getElementById('nickname-error');
-  if (!v.ok){ errEl.textContent = v.msg; return; }
-  errEl.textContent = '';
-  createCharacter(v.name);
+  if (!gameState.selectedServerId) return;
+  createCharacter(gameState.nickname);
   saveGame();
-  enterGame();
+  showScreen('screen-loading-game');
+  startGameLoading();
 }
 
 function continueGame(){
   const data = loadSaveData();
   if (!data){ showToast('Data save tidak ditemukan.'); return; }
   gameState.player = data;
-  enterGame();
+  enterGame(); // langsung Main Game — save lama tanpa serverId tidak
+               // diminta memilih server ulang (serverId dinormalisasi null)
 }
 
 function enterGame(){
@@ -510,7 +775,26 @@ function loadSaveData(){
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    return (data && data.name && data.classId) ? data : null;
+    if (!data || !data.name || !data.classId) return null;
+    // Kompatibilitas save lama (sebelum flow server): normalisasi serverId
+    // menjadi null tanpa memaksa player memilih server ulang.
+    if (typeof data.serverId === 'undefined') data.serverId = null;
+    // Normalisasi ringan field wajib HUD jika save lama tidak lengkap
+    if (typeof data.level !== 'number') data.level = 1;
+    if (typeof data.gold !== 'number') data.gold = 0;
+    if (typeof data.exp !== 'number') data.exp = 0;
+    if (typeof data.expToNext !== 'number') data.expToNext = 100;
+    if (typeof data.hp !== 'number' || typeof data.maxHp !== 'number'){
+      const cls = getClass(data.classId);
+      data.maxHp = cls ? cls.stats.hp : 100;
+      data.hp = data.maxHp;
+    }
+    if (typeof data.mp !== 'number' || typeof data.maxMp !== 'number'){
+      const cls = getClass(data.classId);
+      data.maxMp = cls ? cls.stats.mp : 30;
+      data.mp = data.maxMp;
+    }
+    return data;
   } catch(e){ return null; }
 }
 function checkSave(){
@@ -518,7 +802,8 @@ function checkSave(){
   catch(e){ gameState.hasSave = false; }
 }
 function updateContinueBtn(){
-  document.getElementById('btn-continue').disabled = !gameState.hasSave;
+  const btn = document.getElementById('btn-continue');
+  if (btn) btn.disabled = !gameState.hasSave;
 }
 
 // ============================================================
@@ -527,16 +812,19 @@ function updateContinueBtn(){
 function updateHUD(){
   const p = gameState.player;
   if (!p) return;
-  document.getElementById('hud-name').textContent = p.name;
-  document.getElementById('hud-level').textContent = 'Lv.' + p.level;
-  document.getElementById('hud-gold').textContent = p.gold;
-  document.getElementById('bar-hp').style.width  = Math.max(0, Math.min(100, p.hp  / p.maxHp * 100)) + '%';
-  document.getElementById('bar-mp').style.width  = Math.max(0, Math.min(100, p.mp  / p.maxMp * 100)) + '%';
-  document.getElementById('bar-exp').style.width = Math.max(0, Math.min(100, p.exp / p.expToNext * 100)) + '%';
-  document.getElementById('bar-hp-text').textContent  = p.hp + '/' + p.maxHp;
-  document.getElementById('bar-mp-text').textContent  = p.mp + '/' + p.maxMp;
-  document.getElementById('bar-exp-text').textContent = p.exp + '/' + p.expToNext;
-  document.getElementById('hud-avatar').innerHTML =
+  const el = (id) => document.getElementById(id);
+  const nameEl = el('hud-name');
+  if (!nameEl) return; // HUD belum tersedia — jangan lanjut
+  nameEl.textContent = p.name;
+  el('hud-level').textContent = 'Lv.' + p.level;
+  el('hud-gold').textContent = p.gold;
+  el('bar-hp').style.width  = Math.max(0, Math.min(100, p.hp  / p.maxHp * 100)) + '%';
+  el('bar-mp').style.width  = Math.max(0, Math.min(100, p.mp  / p.maxMp * 100)) + '%';
+  el('bar-exp').style.width = Math.max(0, Math.min(100, p.exp / p.expToNext * 100)) + '%';
+  el('bar-hp-text').textContent  = p.hp + '/' + p.maxHp;
+  el('bar-mp-text').textContent  = p.mp + '/' + p.maxMp;
+  el('bar-exp-text').textContent = p.exp + '/' + p.expToNext;
+  el('hud-avatar').innerHTML =
     charSVG(p.appearance, p.classId, 44, true);
 }
 
@@ -550,8 +838,11 @@ const world = {
 
 function startWorldPreview(){
   if (world.running) return;
+  if (!gameState.player) return; // null safety — tanpa player tidak ada preview
   world.canvas = document.getElementById('world-canvas');
+  if (!world.canvas) return;
   world.ctx = world.canvas.getContext('2d', { alpha:false });
+  if (!world.ctx) return;
   resizeCanvas();
   world.playerImg = svgToImage(charSVG(gameState.player.appearance, gameState.player.classId, 120));
   world.npcImgs = [
@@ -771,12 +1062,17 @@ function drawWorld(t){
 const modalEl = () => document.getElementById('modal');
 
 function openModal(title, bodyHTML){
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-body').innerHTML = bodyHTML;
-  modalEl().classList.remove('hidden');
+  const titleEl = document.getElementById('modal-title');
+  const bodyEl = document.getElementById('modal-body');
+  const modal = modalEl();
+  if (!titleEl || !bodyEl || !modal) return;
+  titleEl.textContent = title;
+  bodyEl.innerHTML = bodyHTML;
+  modal.classList.remove('hidden');
 }
 function closeModal(){
-  modalEl().classList.add('hidden');
+  const modal = modalEl();
+  if (modal) modal.classList.add('hidden');
 }
 
 function openSettingsModal(){
@@ -799,6 +1095,7 @@ function openHudMenu(){
 let toastTimer = 0;
 function showToast(msg){
   const el = document.getElementById('toast');
+  if (!el) return;
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
@@ -818,12 +1115,12 @@ function bindEvents(){
   document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
   document.getElementById('btn-exit').addEventListener('click', openExitModal);
 
-  // Tombol kembali (header)
+  // Tombol kembali (header) — dengan refresh UI sesuai screen tujuan
   document.querySelectorAll('.btn-back').forEach(btn => {
-    btn.addEventListener('click', () => showScreen(btn.dataset.back));
+    btn.addEventListener('click', () => navigateBack(btn.dataset.back));
   });
 
-  // Character selection (delegasi — terpasang sekali, tidak dirender ulang)
+  // Character selection (delegasi — terpasang sekali)
   document.getElementById('class-list').addEventListener('click', e => {
     const thumb = e.target.closest('.cs-thumb');
     if (!thumb) return;
@@ -831,13 +1128,21 @@ function bindEvents(){
   });
   document.getElementById('btn-class-confirm').addEventListener('click', confirmClass);
 
-  // Character creation
-  const nick = document.getElementById('nickname');
-  nick.addEventListener('input', () => {
-    document.getElementById('nick-count').textContent = nick.value.length + '/16';
-    document.getElementById('nickname-error').textContent = '';
+  // Character creation — BUAT menuju Nickname (bukan langsung main)
+  document.getElementById('btn-start-game').addEventListener('click', openNickname);
+
+  // Nickname — validasi real-time saat mengetik
+  const nkInput = document.getElementById('nk-nickname');
+  nkInput.addEventListener('input', () => updateNicknameUI(nkInput.value));
+  document.getElementById('btn-nickname-confirm').addEventListener('click', confirmNickname);
+
+  // Server selection (delegasi — terpasang sekali)
+  document.getElementById('server-list').addEventListener('click', e => {
+    const card = e.target.closest('.srv-card');
+    if (!card) return;
+    selectServer(card.dataset.server);
   });
-  document.getElementById('btn-start-game').addEventListener('click', startGame);
+  document.getElementById('btn-server-confirm').addEventListener('click', confirmServer);
 
   // HUD
   document.getElementById('btn-hud-menu').addEventListener('click', openHudMenu);
@@ -863,15 +1168,22 @@ function bindEvents(){
     }
   });
 
-  // Resize & visibility (hemat baterai/RAM saat tab tersembunyi)
+  // Resize & visibility
+  // - Background (hidden): hentikan World Preview & Game Loading (tanpa merusak state).
+  // - Kembali (visible): resume World Preview / Game Loading dari posisi terakhir.
   let resizeTO = 0;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTO);
     resizeTO = setTimeout(() => { if (world.running) resizeCanvas(); }, 150);
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopWorldPreview();
-    else if (gameState.currentScreen === 'screen-game') startWorldPreview();
+    if (document.hidden){
+      stopWorldPreview();
+      if (gameState.currentScreen === 'screen-loading-game') stopGameLoading();
+    } else {
+      if (gameState.currentScreen === 'screen-game') startWorldPreview();
+      else if (gameState.currentScreen === 'screen-loading-game') resumeGameLoading();
+    }
   });
 }
 

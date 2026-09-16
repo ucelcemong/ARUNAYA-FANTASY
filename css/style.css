@@ -1,10 +1,13 @@
 /* ==========================================================
-   ARUNAYA FANTASY — STAGE 1 (Foundation UI)
-   Palet: hangat, original, sentuhan Nusantara halus
-   Character Selection v2 (CHARACTER FIRST)
+   ARUNAYA FANTASY — STAGE 1 FOUNDATION V2
+   Full replacement — kompatibel dengan index.html & main.js terbaru
+   Flow: Loading → Menu → Selection → Creation → Nickname →
+         Server → Game Loading → Main Game
+   Palet: hangat, fantasy, sentuhan Nusantara halus (motif diamond)
+   Prioritas: stabil → ringan → responsive → touch-friendly
    ========================================================== */
 
-/* ---------- VARIABEL & BASE ---------- */
+/* ---------- VARIABEL ---------- */
 :root{
   --bg:        #241C14;
   --bg-soft:   #2F261B;
@@ -22,6 +25,8 @@
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
+
+/* ---------- BASE ---------- */
 *{ margin:0; padding:0; box-sizing:border-box; }
 html,body{ height:100%; }
 body{
@@ -32,9 +37,13 @@ body{
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
 }
-button{ font-family:inherit; border:none; background:none; color:inherit; cursor:pointer; touch-action:manipulation; }
+button{
+  font-family:inherit; border:none; background:none; color:inherit;
+  cursor:pointer; touch-action:manipulation;
+}
 button:disabled{ cursor:default; }
 input{ font-family:inherit; }
+img{ display:block; }
 #app{ position:fixed; inset:0; overflow:hidden; }
 
 /* ---------- SCREEN DASAR ---------- */
@@ -47,7 +56,7 @@ input{ font-family:inherit; }
     repeating-linear-gradient(-45deg, rgba(200,135,58,.035) 0 2px, transparent 2px 28px);
 }
 .screen.active{ display:flex; animation:screenIn .25s ease-out; }
-@keyframes screenIn{ from{opacity:0} to{opacity:1} }
+@keyframes screenIn{ from{ opacity:0 } to{ opacity:1 } }
 
 /* ---------- LOGO ---------- */
 .game-logo{
@@ -72,27 +81,76 @@ input{ font-family:inherit; }
   transform:translateX(-50%) rotate(45deg); background:var(--gold);
 }
 
-/* ---------- A. LOADING ---------- */
+/* ---------- SCREEN HEADER ---------- */
+.screen-header{
+  display:grid; grid-template-columns:92px 1fr 92px; align-items:center;
+  padding:calc(10px + var(--safe-t)) 14px 10px;
+  background:var(--bg-soft);
+  border-bottom:2px solid rgba(200,135,58,.35);
+}
+.screen-header h2{
+  text-align:center; font-size:15px; letter-spacing:.18em; color:var(--gold);
+}
+.btn-back{
+  justify-self:start; padding:10px 12px; border-radius:10px;   /* area sentuh ±40px */
+  color:var(--panel); font-size:13px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(242,232,213,.25);
+  transition:background-color .15s ease;
+}
+.btn-back:active{ background:rgba(255,255,255,.16); }
+.btn-back:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+/* ---------- SCREEN FOOTER (tombol utama) ---------- */
+.screen-footer,
+.create-footer{
+  padding:10px 14px calc(14px + var(--safe-b));
+  background:var(--bg-soft);
+  border-top:2px solid rgba(200,135,58,.35);
+}
+.screen-footer .menu-btn,
+.create-footer .menu-btn{ width:100%; }
+
+/* ---------- SISTEM TOMBOL ---------- */
+.menu-btn{
+  padding:14px 18px; border-radius:12px;                        /* tinggi ±48px */
+  background:var(--panel); border:2px solid var(--gold-deep);
+  color:var(--ink); font-weight:700; letter-spacing:.14em; font-size:15px;
+  transition:transform .08s ease, filter .15s ease;
+}
+.menu-btn:active:not(:disabled){ transform:scale(.96); filter:brightness(.93); }
+.menu-btn.primary{ background:var(--gold); color:#241C14; }
+.menu-btn:disabled{ opacity:.4; }
+.menu-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+@media (hover:hover){
+  .menu-btn:not(:disabled):hover{ filter:brightness(1.06); }
+}
+
+/* ============================================================
+   1. LOADING SCREEN
+   ============================================================ */
 .loading-center{
   flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:28px; padding:24px;
 }
 .loading-title-wrap{ text-align:center; animation:logoIn .9s ease-out; }
-@keyframes logoIn{ from{opacity:0; transform:translateY(8px) scale(.97)} to{opacity:1; transform:none} }
+@keyframes logoIn{ from{ opacity:0; transform:translateY(8px) scale(.97) } to{ opacity:1; transform:none } }
 .loading-bar-wrap{
   width:min(300px,72vw); height:14px; padding:2px;
   border:2px solid var(--gold-deep); border-radius:8px;
   background:rgba(0,0,0,.3);
 }
-#loading-bar{
+#loading-bar,
+#loading-game-bar{
   height:100%; width:0%; border-radius:5px;
   background:repeating-linear-gradient(45deg, var(--gold) 0 8px, var(--gold-deep) 8px 16px);
   animation:barShift .5s linear infinite;
 }
-@keyframes barShift{ from{background-position:0 0} to{background-position:22.6px 0} }
+@keyframes barShift{ from{ background-position:0 0 } to{ background-position:22.6px 0 } }
 .loading-text{ color:var(--panel); opacity:.85; font-size:14px; letter-spacing:.06em; }
 
-/* ---------- B. MAIN MENU ---------- */
+/* ============================================================
+   2. MAIN MENU
+   ============================================================ */
 .menu-inner{
   flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:34px; padding:24px;
@@ -104,38 +162,12 @@ input{ font-family:inherit; }
   text-align:center; color:var(--ink-soft); font-size:11px; letter-spacing:.08em;
 }
 
-/* ---------- TOMBOL ---------- */
-.menu-btn{
-  padding:14px 18px; border-radius:12px;
-  background:var(--panel); border:2px solid var(--gold-deep);
-  color:var(--ink); font-weight:700; letter-spacing:.14em; font-size:15px;
-  transition:transform .08s ease, filter .15s ease;
-}
-.menu-btn:active:not(:disabled){ transform:scale(.96); filter:brightness(.93); }
-.menu-btn.primary{ background:var(--gold); color:#241C14; }
-.menu-btn:disabled{ opacity:.4; }
-@media (hover:hover){
-  .menu-btn:not(:disabled):hover{ filter:brightness(1.06); }
-}
-
-/* ---------- HEADER SCREEN (Class / Create) ---------- */
-.screen-header{
-  display:grid; grid-template-columns:92px 1fr 92px; align-items:center;
-  padding:calc(12px + var(--safe-t)) 14px 12px;
-  background:var(--bg-soft);
-  border-bottom:2px solid rgba(200,135,58,.35);
-}
-.screen-header h2{
-  text-align:center; font-size:15px; letter-spacing:.18em; color:var(--gold);
-}
-.btn-back{
-  justify-self:start; padding:8px 10px; border-radius:10px;
-  color:var(--panel); font-size:13px;
-  background:rgba(255,255,255,.06); border:1px solid rgba(242,232,213,.25);
-}
-.btn-back:active{ background:rgba(255,255,255,.16); }
-
-/* ---------- C. CHARACTER SELECTION (v2 — CHARACTER FIRST) ---------- */
+/* ============================================================
+   3. CHARACTER SELECTION (showcase — dirender JS ke #class-list)
+   Struktur JS: .cs-layout > .cs-head(.cs-name,.cs-role)
+                .cs-hero(img) .cs-body(.cs-desc,.cs-vitals,.cs-stats)
+                .cs-thumbs(.cs-thumb)
+   ============================================================ */
 #screen-class .screen-header h2{
   font-size:clamp(11px, 3.4vw, 15px);
   letter-spacing:.12em; line-height:1.3; padding:0 4px;
@@ -145,32 +177,39 @@ input{ font-family:inherit; }
   padding:10px 14px 12px;
 }
 .cs-layout{
-  display:flex; flex-direction:column; gap:12px;
+  display:flex; flex-direction:column; gap:10px;
   width:100%; max-width:520px; margin:0 auto;
 }
+.cs-head{
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  text-align:center;
+}
+.cs-name{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:clamp(20px, 5.6vw, 26px);
+  letter-spacing:.05em; color:var(--gold);
+  text-shadow:0 2px 0 rgba(0,0,0,.35);
+}
+.cs-role{
+  display:inline-block;
+  font-size:10.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--gold-deep); background:var(--panel-soft);
+  padding:3px 12px; border-radius:999px;
+  border:1px solid rgba(156,101,38,.35);
+}
 .cs-hero{
-  height:clamp(190px, 34vh, 330px);
+  height:clamp(210px, 38vh, 380px);
   display:flex; align-items:flex-end; justify-content:center;
 }
 .cs-hero img{
   width:100%; height:100%;
-  object-fit:contain; object-position:center bottom; /* karakter selalu utuh */
+  object-fit:contain; object-position:center bottom; /* PNG proporsional, tidak terpotong */
 }
-.cs-info{
+.cs-body{
   background:var(--panel); border:2px solid var(--panel-soft);
   border-radius:14px; padding:12px 14px;
 }
-.cs-name{
-  font-family:Georgia,'Times New Roman',serif;
-  font-size:20px; letter-spacing:.04em; color:var(--ink);
-}
-.cs-role{
-  display:inline-block; margin-top:4px;
-  font-size:10.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--gold-deep); background:var(--panel-soft);
-  padding:3px 10px; border-radius:999px;
-}
-.cs-desc{ font-size:12.5px; line-height:1.55; color:#6E5F4A; margin:9px 0 11px; }
+.cs-desc{ font-size:12.5px; line-height:1.55; color:#6E5F4A; margin-bottom:11px; }
 .cs-vitals{ display:flex; flex-direction:column; gap:7px; margin-bottom:11px; }
 .cs-vital{ display:grid; grid-template-columns:26px 1fr 36px; align-items:center; gap:8px; }
 .cs-vital-label{ font-size:11px; font-weight:700; color:var(--ink-soft); }
@@ -186,7 +225,7 @@ input{ font-family:inherit; }
 .cs-stats li{ background:var(--panel-soft); border-radius:8px; padding:6px 2px; text-align:center; }
 .cs-stats span{ display:block; font-size:9px; font-weight:700; letter-spacing:.08em; color:var(--ink-soft); }
 .cs-stats b{ font-size:14px; color:var(--ink); }
-.cs-thumbs{ display:flex; justify-content:center; gap:10px; }
+.cs-thumbs{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
 .cs-thumb{
   width:clamp(64px, 19vw, 84px);
   display:flex; flex-direction:column; align-items:center; gap:4px;
@@ -200,104 +239,299 @@ input{ font-family:inherit; }
   background:linear-gradient(180deg, #DCE9C6, #C8DDB0);
   display:flex; align-items:center; justify-content:center;
 }
-.cs-thumb-img img{ width:100%; height:100%; object-fit:contain; }
+.cs-thumb-img img{ width:100%; height:100%; object-fit:contain; object-position:center bottom; }
 .cs-thumb-name{ font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--ink); }
 .cs-thumb.selected{
   border-color:var(--gold); box-shadow:0 0 0 2px var(--gold);
   transform:scale(1.05); filter:brightness(1.04);
 }
-.cs-swap{ animation:csFade .2s ease-out; }
-@keyframes csFade{ from{ opacity:.35; } }
-.cs-thumb:focus-visible, #btn-class-confirm:focus-visible{
-  outline:2px solid var(--gold); outline-offset:2px;
-}
+.cs-thumb:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+.cs-swap{ animation:csFade .2s ease-out; }   /* fade sekali-jalan saat ganti karakter */
+@keyframes csFade{ from{ opacity:.35 } }
 @media (hover:hover){
   .cs-thumb:not(.selected):hover{ border-color:var(--gold); filter:brightness(1.05); }
 }
 
-/* Landscape / PC: karakter kiri, info kanan, thumbnail di bawah karakter */
+/* Landscape / PC selection: karakter BESAR di kiri (tanpa batas vh yang mengecilkan) */
 @media (orientation:landscape) and (min-width:640px){
   .class-list{ padding:10px 22px 12px; }
   .cs-layout{
     height:100%;
     display:grid;
-    grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);
-    grid-template-rows:minmax(0,1fr) auto;
-    grid-template-areas:"hero info" "thumbs info";
-    gap:8px 26px;
+    grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-areas:
+      "hero head"
+      "hero body"
+      "thumbs body";
+    gap:10px 26px;
   }
-  .cs-hero{ grid-area:hero; height:auto; min-height:0; align-self:stretch; }
-  .cs-info{ grid-area:info; align-self:center; max-height:100%; overflow-y:auto; }
+  .cs-head{ grid-area:head; text-align:left; align-items:flex-start; }
+  .cs-hero{ grid-area:hero; height:auto; align-self:stretch; min-height:280px; }
+  .cs-body{ grid-area:body; align-self:start; max-height:100%; overflow-y:auto; }
   .cs-thumbs{ grid-area:thumbs; justify-content:flex-start; }
-  #screen-class .screen-footer{ display:flex; justify-content:flex-end; padding-right:6%; }
-  #screen-class .screen-footer .menu-btn{ width:auto; min-width:min(300px, 56vw); }
+  .cs-thumb{ width:clamp(60px, 9vw, 78px); }
+  .cs-thumb-img{ height:clamp(52px, 8vw, 66px); }
+  #screen-class .screen-footer,
+  #screen-nickname .screen-footer,
+  #screen-server .screen-footer,
+  #screen-create .create-footer{
+    display:flex; justify-content:flex-end; padding-right:6%;
+  }
+  #screen-class .screen-footer .menu-btn,
+  #screen-nickname .screen-footer .menu-btn,
+  #screen-server .screen-footer .menu-btn,
+  #screen-create .create-footer .menu-btn{
+    width:auto; min-width:min(280px, 52vw);
+  }
 }
 
-/* ---------- D. CHARACTER CREATION ---------- */
+/* ============================================================
+   4. CHARACTER CREATION
+   (opsi .chip/.swatch dibuat JS ke #opt-*)
+   ============================================================ */
 .create-body{
-  flex:1; overflow-y:auto;
+  flex:1; min-height:0; overflow-y:auto;
   display:flex; flex-direction:column; gap:12px; padding:14px;
 }
-.create-preview{
-  align-self:center; width:min(196px,54vw);
-  background:#DCE9C6; border:2px solid var(--panel-soft); border-radius:16px;
-  padding:8px; display:flex; justify-content:center;
+/* Frame karakter: panel fantasy + ornament sudut diamond */
+.create-preview,
+.nk-preview{
+  position:relative;
+  background:linear-gradient(180deg, #EDF3DE 0%, #DCE9C6 58%, #C8DDB0 100%);
+  border:2px solid var(--gold-deep);
+  border-radius:16px;
+  padding:10px;
+  display:flex; justify-content:center;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.45);
 }
-.create-preview svg{ max-width:100%; height:auto; }
+.create-preview::before, .create-preview::after,
+.nk-preview::before, .nk-preview::after{
+  content:''; position:absolute; width:9px; height:9px;
+  background:var(--gold); transform:rotate(45deg);
+}
+.create-preview::before, .nk-preview::before{ top:-6px; left:-6px; }
+.create-preview::after,  .nk-preview::after{ bottom:-6px; right:-6px; }
+.create-preview svg, .nk-preview svg{ max-width:100%; height:auto; }
+.create-preview{
+  align-self:center;
+  width:min(248px, 64vw, 42vh);
+}
+#cc-class-info{
+  display:flex; align-items:center; justify-content:center;
+  gap:9px; flex-wrap:wrap;
+}
+#cc-class-info .cc-char{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:17px; letter-spacing:.05em; color:var(--panel);
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+#cc-class-info .cc-role{
+  font-size:10px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--gold-deep); background:var(--panel-soft);
+  padding:3px 10px; border-radius:999px;
+  border:1px solid rgba(156,101,38,.35);
+}
 .create-options{ display:flex; flex-direction:column; gap:10px; }
+.create-options::before{
+  content:'CUSTOMIZATION';
+  font-size:11px; font-weight:700; letter-spacing:.22em;
+  color:var(--gold); text-align:center;
+  padding-bottom:2px;
+}
 .opt-group{
   background:var(--panel); border:1px solid var(--panel-soft);
-  border-radius:12px; padding:8px 10px;
+  border-radius:12px; padding:9px 10px;
 }
 .opt-label{
-  display:block; font-size:11px; font-weight:700; letter-spacing:.1em;
-  color:var(--gold-deep); text-transform:uppercase; margin-bottom:6px;
+  display:block; font-size:11px; font-weight:700; letter-spacing:.12em;
+  color:var(--gold-deep); text-transform:uppercase; margin-bottom:7px;
+}
+.opt-label::before{
+  content:''; display:inline-block; width:6px; height:6px;
+  background:var(--gold); transform:rotate(45deg);
+  margin-right:7px; vertical-align:1px;
 }
 .opt-row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .chip{
-  padding:7px 14px; border-radius:999px;
+  position:relative;
+  padding:10px 16px; border-radius:999px;                     /* tinggi ±41px */
   background:var(--panel-soft); color:var(--ink);
   font-size:12.5px; font-weight:700; border:2px solid transparent;
-  transition:transform .08s ease;
+  transition:transform .08s ease, border-color .15s ease, background-color .15s ease;
 }
 .chip:active{ transform:scale(.94); }
 .chip.selected{ border-color:var(--gold); background:#F7EFD9; }
+.chip.selected::after{
+  content:'✓'; position:absolute; top:-7px; right:-4px;
+  width:17px; height:17px; border-radius:50%;
+  background:var(--gold); color:#241C14;
+  font-size:11px; font-weight:700; line-height:17px; text-align:center;
+  box-shadow:0 0 0 2px var(--panel);
+}
 .swatch{
-  width:32px; height:32px; border-radius:50%;
+  width:38px; height:38px; border-radius:50%;
   border:2px solid rgba(0,0,0,.15); transition:transform .08s ease;
 }
 .swatch:active{ transform:scale(.9); }
 .swatch.selected{
   box-shadow:0 0 0 3px var(--panel), 0 0 0 5px var(--gold);
-  transform:scale(1.05);
+  transform:scale(1.06);
 }
-.create-footer{
-  padding:10px 14px calc(14px + var(--safe-b));
-  background:var(--bg-soft); border-top:2px solid rgba(200,135,58,.35);
+.chip:focus-visible,
+.swatch:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+/* Landscape / PC creation: preview + info class kiri, customization kanan */
+@media (orientation:landscape) and (min-width:640px){
+  .create-body{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:
+      "preview options"
+      "classinfo options";
+    gap:8px 24px;
+    align-items:start;
+    overflow:hidden;
+  }
+  .create-preview{ grid-area:preview; justify-self:center; width:min(260px, 30vw); padding:8px; }
+  #cc-class-info{ grid-area:classinfo; }
+  .create-options{ grid-area:options; overflow-y:auto; max-height:100%; gap:9px; padding-right:4px; }
 }
-.nickname-label-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
-.nickname-label-row label{
-  font-size:11px; font-weight:700; letter-spacing:.1em;
-  color:var(--gold); text-transform:uppercase;
+
+/* ============================================================
+   5. NICKNAME
+   ============================================================ */
+.nk-body{
+  flex:1; min-height:0; overflow-y:auto;
+  display:flex; justify-content:center;
+  padding:16px 14px;
 }
-.nick-count{ font-size:10.5px; color:var(--ink-soft); }
-#nickname{
-  width:100%; padding:12px 14px; border-radius:10px; font-size:15px;
+.nk-card{
+  width:100%; max-width:400px;
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+}
+.nk-preview{ width:min(200px, 54vw); }
+.nk-classinfo{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+.nk-char{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:18px; letter-spacing:.05em; color:var(--panel);
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+.nk-role{
+  font-size:10px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--gold-deep); background:var(--panel-soft);
+  padding:3px 10px; border-radius:999px;
+}
+.nk-field{ width:100%; }
+.nk-field label{
+  display:block; font-size:11px; font-weight:700; letter-spacing:.12em;
+  color:var(--gold); text-transform:uppercase; margin-bottom:6px; text-align:center;
+}
+#nk-nickname{
+  width:100%; padding:13px 14px; border-radius:10px; font-size:16px;
   background:var(--panel); border:2px solid var(--panel-soft); color:var(--ink);
   user-select:text; -webkit-user-select:text;
 }
-#nickname:focus{ outline:none; border-color:var(--gold); }
-.nickname-error{ min-height:15px; font-size:11.5px; color:#E2907A; margin-top:4px; }
-#btn-start-game{ width:100%; }
+#nk-nickname:focus{
+  outline:none; border-color:var(--gold);
+  box-shadow:0 0 0 2px rgba(200,135,58,.25);   /* ring statis, bukan glow */
+}
+.nk-meta{
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:10px; margin-top:5px; min-height:30px;
+}
+.nk-count{ flex:none; font-size:11px; color:var(--ink-soft); }
+.nk-msg{
+  flex:1; min-width:0;
+  font-size:11.5px; line-height:1.45; text-align:right;
+  white-space:pre-line;                          /* pesan invalid punya 2 baris (\n) */
+}
+.nk-msg.ok{ color:var(--green); font-weight:700; }
+.nk-msg.err{ color:#E2907A; font-weight:700; }
 
-/* ---------- E. MAIN GAME + HUD ---------- */
+/* ============================================================
+   6. SERVER SELECTION (prototype UI)
+   ============================================================ */
+.srv-body{
+  flex:1; min-height:0; overflow-y:auto;
+  width:100%; max-width:520px; margin:0 auto;
+  display:flex; flex-direction:column; gap:12px; padding:14px;
+}
+.srv-subtitle{ font-size:12.5px; line-height:1.5; color:var(--ink-soft); text-align:center; }
+.server-list{ display:flex; flex-direction:column; gap:10px; }
+.srv-card{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  text-align:left; min-height:64px;
+  background:var(--panel); border:2px solid var(--panel-soft);
+  border-radius:14px; padding:13px 14px;
+  transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.srv-card:active{ transform:scale(.98); }
+.srv-main{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.srv-name{ font-size:14px; font-weight:700; letter-spacing:.06em; color:var(--ink); }
+.srv-id{ font-size:11px; color:var(--ink-soft); }
+.srv-status{
+  flex:none; display:inline-flex; align-items:center; gap:6px;
+  font-size:10px; font-weight:700; letter-spacing:.1em;
+  color:var(--green); background:rgba(78,124,74,.14);
+  border:1px solid rgba(78,124,74,.4);
+  padding:4px 10px; border-radius:999px;
+}
+.srv-status::before{
+  content:''; width:7px; height:7px; border-radius:50%;
+  background:var(--green);
+}
+.srv-card.selected{
+  border-color:var(--gold); box-shadow:0 0 0 2px var(--gold);
+  background:#F7EFD9; transform:scale(1.01);
+}
+.srv-card:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+@media (hover:hover){
+  .srv-card:not(.selected):hover{ border-color:var(--gold); }
+}
+.srv-note{ font-size:10.5px; color:var(--ink-soft); text-align:center; }
+
+/* Landscape: kartu server berdampingan */
+@media (orientation:landscape) and (min-width:640px){
+  .server-list{ display:grid; grid-template-columns:1fr 1fr; }
+  .srv-body{ max-width:640px; }
+}
+
+/* ============================================================
+   7. GAME LOADING + TIPS
+   ============================================================ */
+.lg-center{
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:22px; padding:24px;
+  text-align:center;
+}
+.lg-text{ color:var(--panel); opacity:.9; font-size:14px; letter-spacing:.06em; }
+#loading-game-pct{ color:var(--gold); font-weight:700; }
+.lg-tip{
+  width:min(340px, 84vw);
+  background:var(--panel); border:2px solid var(--panel-soft);
+  border-radius:14px; padding:12px 14px;
+  display:flex; flex-direction:column; gap:5px; text-align:left;
+}
+.lg-tip-label{ font-size:10px; font-weight:700; letter-spacing:.22em; color:var(--gold-deep); }
+#loading-game-tip{ font-size:12.5px; line-height:1.55; color:var(--ink); min-height:40px; }
+.tip-swap{ animation:tipFade .35s ease-out; }   /* fade tip — dipicu JS, bukan loop */
+@keyframes tipFade{ from{ opacity:0 } }
+
+/* ============================================================
+   8. MAIN GAME / HUD / WORLD PREVIEW
+   ============================================================ */
 #screen-game{ background:#7AA653; }
-#world-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+#world-canvas{
+  position:absolute; inset:0; width:100%; height:100%;
+  display:block;                                 /* ukuran buffer diatur JS (dpr) */
+}
 
 .hud-top{
   position:absolute; top:var(--safe-t); left:0; right:0;
   display:flex; justify-content:space-between; align-items:flex-start;
-  padding:10px 10px 0; pointer-events:none;
+  padding:10px 10px 0; pointer-events:none;      /* area kosong tidak menghalangi canvas */
 }
 .hud-left{
   display:flex; gap:8px; align-items:center; max-width:62vw;
@@ -309,6 +543,7 @@ input{ font-family:inherit; }
   border-radius:50%; background:#DCE9C6; border:2px solid var(--gold);
   display:flex; justify-content:center;
 }
+.hud-avatar svg{ display:block; }
 .hud-stats{ flex:1; min-width:0; }
 .hud-name-row{ display:flex; align-items:center; gap:6px; margin-bottom:4px; }
 #hud-name{
@@ -342,9 +577,9 @@ input{ font-family:inherit; }
   border-radius:999px; padding:5px 12px 5px 6px;
   color:var(--gold); font-weight:700; font-size:13px;
 }
-.hud-gold svg{ width:18px; height:18px; }
+.hud-gold svg{ width:18px; height:18px; flex:none; }
 .hud-menu-btn{
-  pointer-events:auto; padding:8px 14px; border-radius:10px;
+  pointer-events:auto; padding:10px 14px; border-radius:10px;
   background:rgba(36,28,20,.72); border:2px solid rgba(200,135,58,.5);
   color:var(--panel); font-size:11px; font-weight:700; letter-spacing:.12em;
 }
@@ -357,15 +592,18 @@ input{ font-family:inherit; }
 }
 .hud-btn{
   flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
-  padding:7px 2px; border-radius:10px; color:var(--panel);
+  padding:8px 2px; border-radius:10px; color:var(--panel);   /* tinggi ±48px */
   border:1px solid transparent;
 }
-.hud-btn svg{ width:21px; height:21px; fill:currentColor; }
+.hud-btn svg{ width:21px; height:21px; fill:currentColor; display:block; }
 .hud-btn .gear-hole{ fill:#241C14; }
 .hud-btn span{ font-size:9px; font-weight:700; letter-spacing:.06em; }
 .hud-btn:active{ background:rgba(200,135,58,.25); border-color:rgba(200,135,58,.4); }
+.hud-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 
-/* ---------- MODAL & TOAST ---------- */
+/* ============================================================
+   MODAL
+   ============================================================ */
 .modal{
   position:fixed; inset:0; z-index:50; padding:24px;
   display:flex; align-items:center; justify-content:center;
@@ -392,6 +630,9 @@ input{ font-family:inherit; }
 #modal-body .menu-btn{ width:100%; padding:11px; font-size:13px; letter-spacing:.1em; }
 #modal-close{ width:100%; padding:11px; font-size:13px; letter-spacing:.1em; }
 
+/* ============================================================
+   TOAST
+   ============================================================ */
 .toast{
   position:fixed; left:50%; bottom:calc(84px + var(--safe-b)); z-index:60;
   transform:translateX(-50%) translateY(8px);
@@ -399,23 +640,42 @@ input{ font-family:inherit; }
   border:1px solid rgba(200,135,58,.55);
   padding:10px 16px; border-radius:999px; font-size:12.5px;
   max-width:86vw; text-align:center;
-  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-/* ---------- RESPONSIVE: LANDSCAPE PONSEL ---------- */
+/* ============================================================
+   RESPONSIVE: LANDSCAPE PONSEL PENDEK (compaction saja)
+   ============================================================ */
 @media (orientation:landscape) and (max-height:520px){
-  .create-body{ flex-direction:row; align-items:stretch; }
-  .create-preview{ align-self:flex-start; width:auto; }
-  .create-options{ flex:1; }
-  /* penyesuaian character selection di layar pendek */
-  .cs-name{ font-size:17px; }
-  .cs-desc{ font-size:11.5px; margin:6px 0 8px; }
+  /* Character Creation ringkas */
+  .create-body{ padding:10px 14px; gap:8px; }
+  .create-preview{ padding:4px; }
+  .create-options{ gap:7px; }
+  .create-options::before{ padding-bottom:0; }
+  .opt-group{ padding:6px 9px; }
+  /* Character Selection ringkas — karakter tetap besar */
+  .cs-name{ font-size:18px; }
+  .cs-hero{ min-height:240px; }
+  .cs-desc{ font-size:11.5px; margin-bottom:8px; }
   .cs-stats b{ font-size:12.5px; }
+  /* Nickname ringkas */
+  .nk-body{ padding:10px 14px; }
+  .nk-preview{ width:min(150px, 32vw); padding:6px; }
+  .nk-card{ gap:8px; }
+  /* Server & Game Loading ringkas */
+  .srv-card{ padding:10px 12px; min-height:56px; }
+  .lg-center{ gap:16px; }
+  .lg-tip{ padding:10px 12px; }
 }
 
-/* ---------- RESPONSIVE: LAYAR LEBAR (PC) ---------- */
+/* ============================================================
+   RESPONSIVE: LAYAR LEBAR (PC)
+   ============================================================ */
 @media (min-width:760px){
   .create-body{ width:100%; max-width:600px; margin:0 auto; }
   .create-footer{ width:100%; max-width:600px; margin:0 auto; }
+  .nk-body{ align-items:center; }
+  .nk-card{ max-width:420px; }
 }

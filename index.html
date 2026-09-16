@@ -10,7 +10,14 @@
 <body>
 <div id="app">
 
-  <!-- ============ A. LOADING SCREEN ============ -->
+  <!-- ==================================================
+       FLOW STAGE 1:
+       LOADING → MAIN MENU → CHARACTER SELECTION →
+       CHARACTER CREATION → NICKNAME → SERVER SELECTION →
+       GAME LOADING → MAIN GAME
+       ================================================== -->
+
+  <!-- ============ 1. LOADING SCREEN ============ -->
   <section id="screen-loading" class="screen active">
     <div class="loading-center">
       <div class="loading-title-wrap">
@@ -25,7 +32,7 @@
     </div>
   </section>
 
-  <!-- ============ B. MAIN MENU ============ -->
+  <!-- ============ 2. MAIN MENU ============ -->
   <section id="screen-menu" class="screen">
     <div class="menu-inner">
       <header class="menu-header">
@@ -43,26 +50,33 @@
     <p class="menu-version">ARUNAYA FANTASY — Stage 1 Prototype</p>
   </section>
 
-  <!-- ============ C. CHARACTER SELECTION ============ -->
+  <!-- ============ 3. CHARACTER SELECTION (SHOWCASE) ============
+       Isi #class-list dirender oleh js/main.js:
+       hero besar + nama + class + deskripsi + HP/MP + ATK/DEF/MATK/AGI
+       + 4 thumbnail (Warrior/Archer/Mage/Cleric) + selected state.
+       Asset path dikelola JS dari CLASS_DATA (kael/luna/elara/lior). -->
   <section id="screen-class" class="screen">
     <header class="screen-header">
       <button class="btn-back" data-back="screen-menu">‹ Kembali</button>
-      <h2>PILIH CLASS</h2>
+      <h2>CHARACTER SELECTION</h2>
     </header>
     <div id="class-list" class="class-list"><!-- diisi lewat JS --></div>
     <div class="screen-footer">
-      <button id="btn-class-confirm" class="menu-btn primary" disabled>PILIH CLASS INI</button>
+      <button id="btn-class-confirm" class="menu-btn primary" disabled>PILIH KARAKTER</button>
     </div>
   </section>
 
-  <!-- ============ D. CHARACTER CREATION ============ -->
+  <!-- ============ 4. CHARACTER CREATION ============
+       Opsi gender/skin/hair/haircolor/eyes/clothing dirender oleh JS
+       ke container #opt-* ; preview dirender ke #create-preview. -->
   <section id="screen-create" class="screen">
     <header class="screen-header">
       <button class="btn-back" data-back="screen-class">‹ Kembali</button>
-      <h2>BUAT KARAKTER</h2>
+      <h2>CHARACTER CREATION</h2>
     </header>
     <div class="create-body">
       <div id="create-preview" class="create-preview"><!-- SVG via JS --></div>
+      <div id="cc-class-info"><!-- nama karakter + class via JS --></div>
       <div class="create-options">
         <div class="opt-group"><span class="opt-label">Gender</span><div id="opt-gender" class="opt-row"></div></div>
         <div class="opt-group"><span class="opt-label">Kulit</span><div id="opt-skin" class="opt-row"></div></div>
@@ -73,19 +87,80 @@
       </div>
     </div>
     <div class="create-footer">
-      <div class="nickname-wrap">
-        <div class="nickname-label-row">
-          <label for="nickname">Nama Panggilan</label>
-          <span id="nick-count" class="nick-count">0/16</span>
-        </div>
-        <input id="nickname" type="text" maxlength="16" placeholder="Maks. 16 karakter" autocomplete="off">
-        <p id="nickname-error" class="nickname-error"></p>
-      </div>
-      <button id="btn-start-game" class="menu-btn primary">MULAI PETUALANGAN</button>
+      <button id="btn-start-game" class="menu-btn primary">BUAT</button>
     </div>
   </section>
 
-  <!-- ============ E. MAIN GAME SCREEN ============ -->
+  <!-- ============ 5. NICKNAME ============
+       Validasi ditangani JS real-time; HTML hanya menyediakan elemen. -->
+  <section id="screen-nickname" class="screen">
+    <header class="screen-header">
+      <button class="btn-back" data-back="screen-create">‹ Kembali</button>
+      <h2>CREATE CHARACTER</h2>
+    </header>
+    <div class="nk-body">
+      <div class="nk-card">
+        <div id="nk-preview" class="nk-preview"><!-- SVG via JS --></div>
+        <div class="nk-classinfo">
+          <span id="nk-char" class="nk-char"></span>
+          <span id="nk-role" class="nk-role"></span>
+        </div>
+        <div class="nk-field">
+          <label for="nk-nickname">Nickname</label>
+          <input id="nk-nickname" type="text" maxlength="16" placeholder="Contoh: Kael_01" autocomplete="off" spellcheck="false">
+          <div class="nk-meta">
+            <span id="nk-count" class="nk-count">0 / 16</span>
+            <span id="nk-msg" class="nk-msg" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-footer">
+      <button id="btn-nickname-confirm" class="menu-btn primary" disabled>LANJUTKAN</button>
+    </div>
+  </section>
+
+  <!-- ============ 6. SERVER SELECTION (PROTOTYPE/OFFLINE) ============
+       Daftar kartu server dirender oleh JS dari array SERVERS.
+       Tidak ada networking — status hanya simulasi UI. -->
+  <section id="screen-server" class="screen">
+    <header class="screen-header">
+      <button class="btn-back" data-back="screen-nickname">‹ Kembali</button>
+      <h2>SELECT SERVER</h2>
+    </header>
+    <div class="srv-body">
+      <p class="srv-subtitle">Pilih server untuk memasuki dunia ARUNAYA.</p>
+      <div id="server-list" class="server-list"><!-- diisi lewat JS --></div>
+      <p class="srv-note">Status server merupakan simulasi UI (prototype).</p>
+    </div>
+    <div class="screen-footer">
+      <button id="btn-server-confirm" class="menu-btn primary" disabled>MASUK</button>
+    </div>
+  </section>
+
+  <!-- ============ 7. GAME LOADING + TIPS ============
+       Progress & persentase diupdate JS; tips berputar dari array JS. -->
+  <section id="screen-loading-game" class="screen">
+    <div class="lg-center">
+      <div class="loading-title-wrap">
+        <h1 class="game-logo small">ARUNAYA</h1>
+        <div class="logo-sub">F A N T A S Y</div>
+        <div class="logo-ornament"></div>
+      </div>
+      <p class="lg-text">Memasuki Dunia... <span id="loading-game-pct">0%</span></p>
+      <div class="loading-bar-wrap">
+        <div id="loading-game-bar"></div>
+      </div>
+      <div class="lg-tip">
+        <span class="lg-tip-label">TIP</span>
+        <p id="loading-game-tip"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8. MAIN GAME + HUD ============
+       #world-canvas = World Preview placeholder (digambar JS).
+       Tidak ada combat — HUD statis yang diupdate updateHUD(). -->
   <section id="screen-game" class="screen">
     <canvas id="world-canvas" aria-label="Preview Dunia" role="img"></canvas>
 
@@ -113,23 +188,23 @@
 
     <nav id="hud-bottom" class="hud-bottom">
       <button class="hud-btn" data-panel="CHARACTER" aria-label="Karakter">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="3.6"/><path d="M4.5 20.5c0-4.1 3.4-7.5 7.5-7.5s7.5 3.4 7.5 7.5z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.6"/><path d="M4.5 20.5c0-4.1 3.4-7.5 7.5-7.5s7.5 3.4 7.5 7.5z"/></svg>
         <span>CHARACTER</span>
       </button>
       <button class="hud-btn" data-panel="INVENTORY" aria-label="Inventory">
-        <svg viewBox="0 0 24 24"><path d="M6.6 8.3h10.8l1.2 12H5.4l1.2-12z"/><path d="M9 8V6.8a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 8.3h10.8l1.2 12H5.4l1.2-12z"/><path d="M9 8V6.8a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
         <span>INVENTORY</span>
       </button>
       <button class="hud-btn" data-panel="QUEST" aria-label="Quest">
-        <svg viewBox="0 0 24 24"><path d="M7 3.5h8.5L20 8v12.5H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.5 3.5V8H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 12h6M10 15.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h8.5L20 8v12.5H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.5 3.5V8H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 12h6M10 15.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <span>QUEST</span>
       </button>
       <button class="hud-btn" data-panel="MAP" aria-label="Map">
-        <svg viewBox="0 0 24 24"><path d="M4 6.3 9.3 4l5.4 2.3L20 4v13.7l-5.3 2.3-5.4-2.3L4 20V6.3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9.3 4v13.7M14.7 6.3V20" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.3 9.3 4l5.4 2.3L20 4v13.7l-5.3 2.3-5.4-2.3L4 20V6.3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9.3 4v13.7M14.7 6.3V20" fill="none" stroke="currentColor" stroke-width="2"/></svg>
         <span>MAP</span>
       </button>
       <button class="hud-btn" data-panel="SETTINGS" aria-label="Pengaturan">
-        <svg viewBox="0 0 24 24"><path d="M19.4 13c.04-.33.1-.66.1-1s-.06-.67-.1-1l2.1-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.4 2.65c-.6.26-1.17.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64L4.6 11c-.04.33-.1.66-.1 1s.06.67.1 1l-2.1 1.65a.5.5 0 0 0-.12.64l2 3.46c.13.22.39.31.6.22l2.5-1c.53.4 1.1.74 1.7 1l.4 2.65A.5.5 0 0 0 10 22h4a.5.5 0 0 0 .5-.42l.4-2.65a7.3 7.3 0 0 0 1.7-1l2.5 1c.21.09.47 0 .6-.22l2-3.46a.5.5 0 0 0-.12-.64L19.4 13z"/><circle class="gear-hole" cx="12" cy="12" r="3.2"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13c.04-.33.1-.66.1-1s-.06-.67-.1-1l2.1-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.6-.22l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42l-.4 2.65c-.6.26-1.17.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.64L4.6 11c-.04.33-.1.66-.1 1s.06.67.1 1l-2.1 1.65a.5.5 0 0 0-.12.64l2 3.46c.13.22.39.31.6.22l2.5-1c.53.4 1.1.74 1.7 1l.4 2.65A.5.5 0 0 0 10 22h4a.5.5 0 0 0 .5-.42l.4-2.65a7.3 7.3 0 0 0 1.7-1l2.5 1c.21.09.47 0 .6-.22l2-3.46a.5.5 0 0 0-.12-.64L19.4 13z"/><circle class="gear-hole" cx="12" cy="12" r="3.2"/></svg>
         <span>SETTINGS</span>
       </button>
     </nav>
@@ -137,7 +212,7 @@
 
 </div>
 
-<!-- Modal generik (Pengaturan / Keluar / Menu HUD) -->
+<!-- Modal generik (Pengaturan / Keluar / Menu HUD) — konten diisi JS -->
 <div id="modal" class="modal hidden">
   <div class="modal-box">
     <h3 id="modal-title"></h3>
@@ -146,7 +221,7 @@
   </div>
 </div>
 
-<!-- Toast notifikasi ringan -->
+<!-- Toast notifikasi ringan — konten diisi JS -->
 <div id="toast" class="toast"></div>
 
 <script src="js/main.js"></script>
